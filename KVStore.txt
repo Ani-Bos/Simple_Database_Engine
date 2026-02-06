@@ -1,0 +1,19 @@
+//btree can be dumped to disk using KVstore i.e key value store
+//since btree is immutable so allocate disk space in append only manner
+//immutable--updating a btree doesn't touch the previous version of btree so crash recovery is esasy as even if update goes wrong we can recover the previous version
+
+//for durability we achieved using fsync syscall in linux
+//normal i/o via write or mmap goes to page cache first then flushed to disk but fsync blocks untill all dirty pages are flushed
+
+//update in 2 phase
+//1)an update create new node write it to disk
+//2)an update creates a new root node we need to store pointer to root somewhere
+
+phase1 is not atomic as writing multiple pages to disk
+phase2 is atomic as it uses a single pointer
+
+//phase1 should be persisted before phase2 as some crashes happen the root pointer could point to some corrupted version of node so there should be fsync between phase1 and phase2
+
+//MMap based io basically maps device/file directly with os virtual memory address space
+
+//so it eliminate traditional I/O as it doesn't need the data to be  copied from kernel page cache to seperate user space buffer 
