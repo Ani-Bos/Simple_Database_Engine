@@ -112,5 +112,64 @@ void updateMasterPage(KV_struct *db){
 
 //allocating disk pages
 
+uint64_t allocatepage(KV_struct * db){
+    //reuse deallocated pages
+    assert(length(db->Btree) <= BTREE_PAGE_SIZE)
+    ptr = db->pg1->flushed + (uint64_t)(db->pg1->temp.size());
+    db->pg1->temp.push_back(btree->data);
+    return ptr;
+}
+
+uint64_t deallocatepage(KV_struct *db)
+{
+    // reuse deallocated pages
+    assert(length(db->Btree) <= BTREE_PAGE_SIZE)
+    ptr = db->pg1->flushed + (uint64_t)(db->pg1->temp.size());
+    db->pg1->temp.remove(btree->data);
+    return ptr;
+}
 //simply now add new page at the end of db & new pages are added continously in memory until copied to file later
 
+//Before writing pending pages we may need to extend the file first using fallocate
+
+void extendfile(KV_struct *db , int npages){
+    try{
+        int file_page_size = (db->mmp1->file_size) / BTREE_PAGE_SIZE;
+        if (file_page_size>npages){
+            return nullptr;
+        }
+        while(file_page_size<npages){
+           int  cnt = file_page_size / 8;
+           if(cnt<1){
+               cnt = 1;
+           }
+           file_page_size += cnt;
+        }
+        int filesize = file_page_size * BTREE_PAGE_SIZE;
+        try{
+            int result = posix_fallocate(db->fd, 0, (int64_t)filesize);
+            if (result == 0){
+                cout << "successfully preallocated" << file_size << endl;
+            }
+            db->mp1->file_size = filesize;
+            return nullptr;
+        }
+        catch(exception e){
+            throw new exception("Failed to preallocate file space", e);
+        }
+    }
+    catch(exception e){
+        throw new exception(e);
+    }
+}
+
+void OpenDatabase(KV_struct *db){
+    try{
+        int fd = open(db->path, O_CREAT | O_RDWR, PERM);
+    }
+    catch(exception e){
+        throw new exception("exception occured while creating or reading the file", e);
+    }
+    db->fd = fd;
+
+}
